@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: phd-advisor-agent
+    runtime: docker
+    plan: starter
+    disk:
+      name: advisor-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_PATH
+        value: /data/faculty.sqlite
+      - key: NO_BROWSER
+        value: "1"
+      - key: SCAN_INTERVAL_HOURS
+        value: "168"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SEARCH_API_KEY
+        sync: false
+      - key: SEARCH_ENDPOINT
+        value: https://api.bing.microsoft.com/v7.0/search
