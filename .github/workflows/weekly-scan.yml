@@ -17,6 +17,7 @@ jobs:
 
       - name: Scan and export
         run: |
+          cp input/research_profile.example.md input/research_profile.md
           python agent.py run
           python agent.py export
         env:
