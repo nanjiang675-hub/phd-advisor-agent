@@ -63,12 +63,28 @@ def run_pipeline() -> None:
     init_db(load_inputs=True); cfg=settings(); started=utcnow(); discover_department_urls(cfg)
     with connect() as db:
         run_id=db.execute("INSERT INTO runs(started_at,status) VALUES(?,'running')",(started,)).lastrowid
-        due=db.execute("""SELECT p.*,d.name department_name,s.name school_name,
+        page_limit=max(2,int(cfg["max_pages_per_run"]))
+        directory_limit=max(1,page_limit//2)
+        profile_limit=page_limit-directory_limit
+        base_query="""SELECT p.*,d.name department_name,s.name school_name,
           s.website school_website FROM pages p
           LEFT JOIN departments d ON d.id=p.department_id LEFT JOIN schools s ON s.id=p.school_id
-          WHERE p.attempts<? AND (p.next_check_at IS NULL OR p.next_check_at<=?)
-          ORDER BY CASE p.kind WHEN 'profile' THEN 1 ELSE 0 END,p.attempts LIMIT ?""",
-          (cfg["max_attempts"],started,cfg["max_pages_per_run"])).fetchall()
+          WHERE p.kind=? AND p.attempts<?
+          AND (p.next_check_at IS NULL OR p.next_check_at<=?)
+          ORDER BY p.attempts,
+          (SELECT COUNT(*) FROM pages p2
+           WHERE p2.kind=p.kind AND p2.school_id=p.school_id AND p2.id<=p.id),
+          p.school_id,p.id LIMIT ?"""
+        # Always reserve capacity for both discovery and profile parsing. Previously,
+        # newly discovered directory pages consumed the whole run and starved faculty
+        # profiles, so only the first-ranked school ever appeared in the dashboard.
+        directories=db.execute(
+          base_query,("directory",cfg["max_attempts"],started,directory_limit)
+        ).fetchall()
+        profiles=db.execute(
+          base_query,("profile",cfg["max_attempts"],started,profile_limit)
+        ).fetchall()
+        due=[*directories,*profiles]
     ok=failed=changed=found=model_calls=0; spent=0.0
     profile=(ROOT/"input"/"research_profile.md").read_text(encoding="utf-8").lower()
     workers=max(1,min(int(cfg.get("concurrency",4)),8))
