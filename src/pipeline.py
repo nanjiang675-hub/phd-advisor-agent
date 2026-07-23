@@ -87,7 +87,7 @@ def run_pipeline() -> None:
           LEFT JOIN departments d ON d.id=p.department_id LEFT JOIN schools s ON s.id=p.school_id
           WHERE p.kind=? AND p.attempts<?
           AND (p.next_check_at IS NULL OR p.next_check_at<=?)
-          ORDER BY p.attempts,p.school_id,p.id"""
+          ORDER BY p.attempts,p.school_id,p.url"""
         # Always reserve capacity for both discovery and profile parsing. Previously,
         # newly discovered directory pages consumed the whole run and starved faculty
         # profiles, so only the first-ranked school ever appeared in the dashboard.
