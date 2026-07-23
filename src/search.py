@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -195,6 +196,20 @@ def discover_department_urls(cfg: dict) -> int:
             query = f'site:{official_host} "{department_name}" faculty directory'
             try:
                 results = _search(endpoint, api_key, query)
+            except urllib.error.HTTPError as exc:
+                queries += 1
+                if exc.code == 432:
+                    print(
+                        "Search service returned HTTP 432; continuing with "
+                        "verified built-in department pages.",
+                        flush=True,
+                    )
+                    return added
+                print(
+                    f'Department search failed for {school["name"]}: {exc}',
+                    flush=True,
+                )
+                continue
             except Exception as exc:
                 print(f'Department search failed for {school["name"]}: {exc}', flush=True)
                 queries += 1
