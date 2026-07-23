@@ -59,6 +59,22 @@ def score(record: dict, profile: str, cfg: dict) -> tuple[float,str]:
     return min(100,value),"; ".join(terms) or "manual review needed"
 
 
+def _fair_page_sample(rows, limit):
+    """Select pages round-robin by school so one school cannot fill a run."""
+    queues = {}
+    for row in rows:
+        queues.setdefault(row["school_id"], []).append(row)
+    selected = []
+    while queues and len(selected) < limit:
+        for school_id in list(queues):
+            selected.append(queues[school_id].pop(0))
+            if not queues[school_id]:
+                del queues[school_id]
+            if len(selected) >= limit:
+                break
+    return selected
+
+
 def run_pipeline() -> None:
     init_db(load_inputs=True); cfg=settings(); started=utcnow(); discover_department_urls(cfg)
     with connect() as db:
@@ -71,19 +87,18 @@ def run_pipeline() -> None:
           LEFT JOIN departments d ON d.id=p.department_id LEFT JOIN schools s ON s.id=p.school_id
           WHERE p.kind=? AND p.attempts<?
           AND (p.next_check_at IS NULL OR p.next_check_at<=?)
-          ORDER BY p.attempts,
-          (SELECT COUNT(*) FROM pages p2
-           WHERE p2.kind=p.kind AND p2.school_id=p.school_id AND p2.id<=p.id),
-          p.school_id,p.id LIMIT ?"""
+          ORDER BY p.attempts,p.school_id,p.id"""
         # Always reserve capacity for both discovery and profile parsing. Previously,
         # newly discovered directory pages consumed the whole run and starved faculty
         # profiles, so only the first-ranked school ever appeared in the dashboard.
-        directories=db.execute(
-          base_query,("directory",cfg["max_attempts"],started,directory_limit)
-        ).fetchall()
-        profiles=db.execute(
-          base_query,("profile",cfg["max_attempts"],started,profile_limit)
-        ).fetchall()
+        directories=_fair_page_sample(
+          db.execute(base_query,("directory",cfg["max_attempts"],started)).fetchall(),
+          directory_limit,
+        )
+        profiles=_fair_page_sample(
+          db.execute(base_query,("profile",cfg["max_attempts"],started)).fetchall(),
+          profile_limit,
+        )
         due=[*directories,*profiles]
     ok=failed=changed=found=model_calls=0; spent=0.0
     profile=(ROOT/"input"/"research_profile.md").read_text(encoding="utf-8").lower()
