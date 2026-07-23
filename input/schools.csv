@@ -1,19 +1,19 @@
 rank,school,department,department_url,website,ranking_source,ranking_year
-1,Princeton University,,,,US News National Universities,2025
-2,Massachusetts Institute of Technology,,,,US News National Universities,2025
-3,Harvard University,,,,US News National Universities,2025
-4,Stanford University,,,,US News National Universities,2025
-5,Yale University,,,,US News National Universities,2025
-6,California Institute of Technology,,,,US News National Universities,2025
-6,Duke University,,,,US News National Universities,2025
-6,Johns Hopkins University,,,,US News National Universities,2025
-6,Northwestern University,,,,US News National Universities,2025
-10,University of Pennsylvania,,,,US News National Universities,2025
-11,Cornell University,,,,US News National Universities,2025
-11,University of Chicago,,,,US News National Universities,2025
-13,Brown University,,,,US News National Universities,2025
-13,Columbia University,,,,US News National Universities,2025
-15,Dartmouth College,,,,US News National Universities,2025
+1,Princeton University,Computer Science,https://www.cs.princeton.edu/people/faculty,,US News National Universities,2025
+2,Massachusetts Institute of Technology,Computer Science,https://www.eecs.mit.edu/people/faculty-advisors/,,US News National Universities,2025
+3,Harvard University,Computer Science,https://seas.harvard.edu/computer-science/people,,US News National Universities,2025
+4,Stanford University,Computer Science,https://cs.stanford.edu/people/faculty,,US News National Universities,2025
+5,Yale University,Computer Science,https://cpsc.yale.edu/people/faculty,,US News National Universities,2025
+6,California Institute of Technology,Computer Science,https://www.cms.caltech.edu/people/faculty,,US News National Universities,2025
+6,Duke University,Computer Science,https://cs.duke.edu/people/faculty,,US News National Universities,2025
+6,Johns Hopkins University,Computer Science,https://www.cs.jhu.edu/faculty/,,US News National Universities,2025
+6,Northwestern University,Computer Science,https://www.mccormick.northwestern.edu/computer-science/people/faculty/,,US News National Universities,2025
+10,University of Pennsylvania,Computer Science,https://www.cis.upenn.edu/about-people/faculty/,,US News National Universities,2025
+11,Cornell University,Computer Science,https://www.cs.cornell.edu/people/faculty,,US News National Universities,2025
+11,University of Chicago,Computer Science,https://cs.uchicago.edu/people/faculty/,,US News National Universities,2025
+13,Brown University,Computer Science,https://cs.brown.edu/people/faculty/,,US News National Universities,2025
+13,Columbia University,Computer Science,https://www.cs.columbia.edu/people/faculty/,,US News National Universities,2025
+15,Dartmouth College,Computer Science,https://web.cs.dartmouth.edu/people/faculty,,US News National Universities,2025
 15,University of California Los Angeles,,,,US News National Universities,2025
 17,University of California Berkeley,,,,US News National Universities,2025
 18,Rice University,,,,US News National Universities,2025
