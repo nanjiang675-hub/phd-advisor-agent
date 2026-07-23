@@ -7,13 +7,25 @@ from datetime import datetime, timezone
 from .config import DB_PATH, ROOT
 
 
+DISCOVERY_DATA_VERSION = "2"
+
+
+class ClosingConnection(sqlite3.Connection):
+    """Commit/rollback and close when used by the project's with-blocks."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        result = super().__exit__(exc_type, exc_value, traceback)
+        self.close()
+        return result
+
+
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DB_PATH, timeout=30)
+    db = sqlite3.connect(DB_PATH, timeout=30, factory=ClosingConnection)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA journal_mode=WAL")
     db.execute("PRAGMA foreign_keys=ON")
@@ -21,6 +33,8 @@ def connect() -> sqlite3.Connection:
 
 
 SCHEMA = """
+CREATE TABLE IF NOT EXISTS metadata(
+ key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS schools(
  id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, rank INTEGER,
  ranking_source TEXT, ranking_year TEXT, website TEXT, active INTEGER DEFAULT 1);
@@ -58,8 +72,29 @@ def init_db(load_inputs: bool = False) -> None:
     with connect() as db:
         db.executescript(SCHEMA)
         _migrate_legacy(db)
+        _ensure_discovery_data_version(db)
     if load_inputs:
         import_schools()
+
+
+def _ensure_discovery_data_version(db: sqlite3.Connection) -> None:
+    """Discard discovery output created before strict domain validation."""
+    row = db.execute(
+        "SELECT value FROM metadata WHERE key='discovery_data_version'"
+    ).fetchone()
+    if row and row[0] == DISCOVERY_DATA_VERSION:
+        return
+    db.execute("DELETE FROM review_queue")
+    db.execute("DELETE FROM faculty")
+    db.execute("DELETE FROM page_versions")
+    db.execute("DELETE FROM pages")
+    db.execute("DELETE FROM departments")
+    db.execute("DELETE FROM runs")
+    db.execute(
+        "INSERT INTO metadata(key,value) VALUES('discovery_data_version',?) "
+        "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        (DISCOVERY_DATA_VERSION,),
+    )
 
 
 def _columns(db: sqlite3.Connection, table: str) -> set[str]:
@@ -106,9 +141,22 @@ def import_schools() -> None:
             rank = int(row["rank"]) if (row.get("rank") or "").isdigit() else None
             db.execute("""INSERT INTO schools(name,rank,ranking_source,ranking_year,website) VALUES(?,?,?,?,?)
                 ON CONFLICT(name) DO UPDATE SET rank=excluded.rank,ranking_source=excluded.ranking_source,
-                ranking_year=excluded.ranking_year,website=excluded.website""", (school, rank, row.get("ranking_source","US News"), row.get("ranking_year"),row.get("website")))
+                ranking_year=excluded.ranking_year,
+                website=COALESCE(NULLIF(excluded.website,''),schools.website)""",
+                (school, rank, row.get("ranking_source","US News"), row.get("ranking_year"),row.get("website")))
             sid = db.execute("SELECT id FROM schools WHERE name=?", (school,)).fetchone()[0]
             if url:
                 db.execute("INSERT OR IGNORE INTO departments(school_id,name,url) VALUES(?,?,?)", (sid, row.get("department",""), url))
                 did = db.execute("SELECT id FROM departments WHERE url=?", (url,)).fetchone()[0]
                 db.execute("INSERT OR IGNORE INTO pages(url,school_id,department_id,kind) VALUES(?,?,?,'directory')", (url,sid,did))
+    domain_path = ROOT / "input" / "official_domains.csv"
+    if domain_path.exists():
+        with domain_path.open(encoding="utf-8-sig", newline="") as f, connect() as db:
+            for row in csv.DictReader(f):
+                school = (row.get("school") or "").strip()
+                website = (row.get("website") or "").strip()
+                if school and website:
+                    db.execute(
+                        "UPDATE schools SET website=? WHERE name=?",
+                        (website, school),
+                    )

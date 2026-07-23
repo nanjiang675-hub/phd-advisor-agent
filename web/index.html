@@ -5,20 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>PhD 导师发现 Agent</title>
   <style>
-    :root{--bg:#f4f7fb;--card:#fff;--ink:#152034;--muted:#667085;--blue:#3157d5;--line:#e5eaf2}
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#152034;--muted:#667085;--blue:#3157d5;--line:#e5eaf2;--green:#087a55}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Microsoft YaHei",sans-serif}
     header{background:linear-gradient(125deg,#172554,#3157d5);color:#fff;padding:38px max(5vw,24px)}
     header h1{margin:0 0 8px;font-size:30px}header p{margin:0;color:#dbe6ff}
-    main{max-width:1180px;margin:24px auto;padding:0 20px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    main{max-width:1320px;margin:24px auto;padding:0 20px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 4px 18px #2233550b}
     .number{font-size:28px;font-weight:750;margin-top:5px}.label{color:var(--muted);font-size:13px}
-    .toolbar{display:flex;gap:10px;align-items:center;margin:18px 0}.toolbar input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px}
-    button{border:0;border-radius:10px;background:var(--blue);color:#fff;padding:12px 16px;cursor:pointer}
-    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:13px}th{color:var(--muted);background:#f9fbfe}
+    .toolbar{display:grid;grid-template-columns:220px 180px 1fr auto;gap:10px;align-items:center;margin:18px 0}
+    input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px}
+    button{border:0;border-radius:10px;background:var(--blue);color:#fff;padding:12px 18px;cursor:pointer}
+    .table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:1080px;table-layout:fixed}
+    th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}th{color:var(--muted);background:#f9fbfe}
+    th:nth-child(1){width:14%}th:nth-child(2){width:15%}th:nth-child(3){width:11%}th:nth-child(4){width:31%}th:nth-child(5){width:12%}th:nth-child(6){width:7%}th:nth-child(7){width:10%}
+    .research{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;line-height:1.45;overflow-wrap:anywhere}
     .score{font-weight:750;color:var(--blue)}.tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3949ab}
-    .empty{text-align:center;padding:56px 20px;color:var(--muted)}a{color:var(--blue)}
-    footer{max-width:1180px;margin:18px auto 40px;padding:0 20px;color:var(--muted);font-size:12px}
-    @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+    .tag.open{background:#e9f8f1;color:var(--green)}.rank{color:var(--muted);font-size:11px;margin-top:4px}.links{display:flex;flex-direction:column;gap:5px}
+    .empty{text-align:center;padding:56px 20px;color:var(--muted)}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+    footer{max-width:1320px;margin:18px auto 40px;padding:0 20px;color:var(--muted);font-size:12px}
+    @media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}}
   </style>
 </head>
 <body>
@@ -30,28 +35,53 @@
       <div class="card"><div class="label">明确招生</div><div class="number" id="open">0</div></div>
       <div class="card"><div class="label">已联系</div><div class="number" id="contacted">0</div></div>
     </section>
-    <div class="toolbar"><input id="search" placeholder="搜索学校、导师、院系或研究方向"><button onclick="loadData()">刷新数据</button></div>
+    <div class="toolbar">
+      <select id="school"><option value="">全部学校</option></select>
+      <select id="status"><option value="">全部招生状态</option><option value="confirmed_open">明确招生</option><option value="suspected_open">疑似招生</option><option value="unknown">待核验</option><option value="not_recruiting">暂不招生</option></select>
+      <input id="search" placeholder="搜索导师、院系或研究方向">
+      <button id="refresh">刷新数据</button>
+    </div>
     <section class="card table-wrap">
-      <table><thead><tr><th>导师</th><th>学校</th><th>院系</th><th>研究方向</th><th>招生状态</th><th>匹配分数</th><th>证据</th></tr></thead><tbody id="rows"></tbody></table>
-      <div id="empty" class="empty">还没有真实数据。请先填写 input 文件夹中的学校和研究背景，然后运行采集任务。</div>
+      <table><thead><tr><th>导师</th><th>学校</th><th>院系</th><th>研究方向</th><th>招生状态</th><th>匹配分</th><th>来源</th></tr></thead><tbody id="rows"></tbody></table>
+      <div id="empty" class="empty">暂无符合筛选条件的导师。</div>
     </section>
   </main>
-  <footer>所有招生判断必须以导师或院系官网证据为准。本工具默认不发送邮件。</footer>
+  <footer>学校归属仅接受已验证的学校官网域名；招生结论必须以导师或院系官网证据为准。本工具默认不发送邮件。</footer>
   <script>
     let records=[];
-    function parseCSV(text){
-      const rows=[];let row=[],field='',quote=false;
-      for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&quote&&n==='"'){field+='"';i++}else if(c==='"'){quote=!quote}else if(c===','&&!quote){row.push(field);field=''}else if((c==='\n'||c==='\r')&&!quote){if(c==='\r'&&n==='\n')i++;row.push(field);if(row.some(x=>x))rows.push(row);row=[];field=''}else field+=c}row.push(field);if(row.some(x=>x))rows.push(row);
-      if(rows.length<2)return[];const h=rows[0].map(x=>x.replace(/^\uFEFF/,''));return rows.slice(1).map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||''])));
-    }
-    function render(){
-      const q=document.querySelector('#search').value.toLowerCase();const shown=records.filter(r=>Object.values(r).join(' ').toLowerCase().includes(q));
-      document.querySelector('#rows').innerHTML=shown.map(r=>`<tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.school)}</td><td>${esc(r.department)}</td><td>${esc(r.research_text||r.match_reasons)}</td><td><span class="tag">${esc(r.admissions_status||'unknown')}</span></td><td class="score">${esc(r.match_score||'0')}</td><td>${r.evidence_url?`<a href="${esc(r.evidence_url)}" target="_blank">查看来源</a>`:'待核验'}</td></tr>`).join('');
-      document.querySelector('#empty').style.display=shown.length?'none':'block';
-      total.textContent=records.length;matched.textContent=records.filter(r=>Number(r.match_score)>=65).length;open.textContent=records.filter(r=>r.admissions_status==='confirmed_open').length;contacted.textContent=records.filter(r=>r.contact_status&&r.contact_status!=='not_contacted').length;
-    }
+    const statusText={confirmed_open:'明确招生',suspected_open:'疑似招生',unknown:'待核验',not_recruiting:'暂不招生'};
     function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-    async function loadData(){try{records=await (await fetch('../api/faculty?'+Date.now())).json();render()}catch(e){console.error(e)}}
-    document.querySelector('#search').addEventListener('input',render);loadData();
+    function safeUrl(value){try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
+    function render(){
+      const q=document.querySelector('#search').value.toLowerCase();
+      const school=document.querySelector('#school').value;
+      const status=document.querySelector('#status').value;
+      const shown=records.filter(r=>(!school||r.school===school)&&(!status||r.admissions_status===status)&&Object.values(r).join(' ').toLowerCase().includes(q));
+      document.querySelector('#rows').innerHTML=shown.map(r=>{
+        const profile=safeUrl(r.profile_url),evidence=safeUrl(r.evidence_url),department=safeUrl(r.department_url);
+        const state=r.admissions_status||'unknown';
+        return `<tr><td><strong>${esc(r.name)}</strong><div class="rank">${esc(r.title||'')}</div></td><td>${esc(r.school)}<div class="rank">${r.school_rank?'US News #'+esc(r.school_rank):''}</div></td><td>${esc(r.department)}</td><td><div class="research" title="${esc(r.research_text||'')}">${esc(r.research_text||r.match_reasons||'待补充')}</div></td><td><span class="tag ${state==='confirmed_open'?'open':''}">${esc(statusText[state]||state)}</span></td><td class="score">${esc(r.match_score||'0')}</td><td><div class="links">${profile?`<a href="${esc(profile)}" target="_blank" rel="noopener">导师主页</a>`:''}${evidence?`<a href="${esc(evidence)}" target="_blank" rel="noopener">招生证据</a>`:''}${department?`<a href="${esc(department)}" target="_blank" rel="noopener">院系官网</a>`:''}</div></td></tr>`;
+      }).join('');
+      document.querySelector('#empty').style.display=shown.length?'none':'block';
+      document.querySelector('#total').textContent=records.length;
+      document.querySelector('#matched').textContent=records.filter(r=>Number(r.match_score)>=65).length;
+      document.querySelector('#open').textContent=records.filter(r=>r.admissions_status==='confirmed_open').length;
+      document.querySelector('#contacted').textContent=records.filter(r=>r.contact_status&&r.contact_status!=='not_contacted').length;
+    }
+    async function loadData(){
+      try{
+        records=await (await fetch('/api/faculty?ts='+Date.now(),{cache:'no-store'})).json();
+        const schools=[...new Set(records.map(r=>r.school).filter(Boolean))].sort();
+        const selected=document.querySelector('#school').value;
+        document.querySelector('#school').innerHTML='<option value="">全部学校</option>'+schools.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+        if(schools.includes(selected))document.querySelector('#school').value=selected;
+        render();
+      }catch(error){console.error(error)}
+    }
+    document.querySelector('#search').addEventListener('input',render);
+    document.querySelector('#school').addEventListener('change',render);
+    document.querySelector('#status').addEventListener('change',render);
+    document.querySelector('#refresh').addEventListener('click',loadData);
+    loadData();
   </script>
 </body></html>

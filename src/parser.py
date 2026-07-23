@@ -105,5 +105,19 @@ def snippet(text: str, pos: int, radius: int = 240) -> str:
 
 
 def research_excerpt(text: str) -> str:
-    m=re.search(r"(?:research interests?|research areas?|my research)[:\s]",text,re.I)
-    return text[m.start():m.start()+1200] if m else text[:1200]
+    cleaned = re.sub(
+        r"(?:Toggle|Chevron Up|Plus Minus|Skip to (?:main )?content)\s*",
+        " ",
+        text,
+        flags=re.I,
+    )
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    m = re.search(
+        r"(?:research interests?|research areas?|my research|research focuses?)[:\s]",
+        cleaned,
+        re.I,
+    )
+    excerpt = cleaned[m.start():m.start()+600] if m else cleaned[:450]
+    sentences = re.split(r"(?<=[.!?])\s+", excerpt)
+    concise = " ".join(sentences[:4]).strip()
+    return concise[:600].rstrip() + ("…" if len(concise) > 600 else "")

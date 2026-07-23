@@ -16,7 +16,7 @@ from .config import ROOT, settings
 from .db import connect, init_db, utcnow
 from .parser import faculty_record, parse, profile_links
 from .verifier import verify_with_model
-from .search import discover_department_urls
+from .search import _host, _same_site, discover_department_urls
 
 _robots: dict[str, urllib.robotparser.RobotFileParser] = {}
 _robots_lock = threading.Lock()
@@ -63,7 +63,8 @@ def run_pipeline() -> None:
     init_db(load_inputs=True); cfg=settings(); started=utcnow(); discover_department_urls(cfg)
     with connect() as db:
         run_id=db.execute("INSERT INTO runs(started_at,status) VALUES(?,'running')",(started,)).lastrowid
-        due=db.execute("""SELECT p.*,d.name department_name,s.name school_name FROM pages p
+        due=db.execute("""SELECT p.*,d.name department_name,s.name school_name,
+          s.website school_website FROM pages p
           LEFT JOIN departments d ON d.id=p.department_id LEFT JOIN schools s ON s.id=p.school_id
           WHERE p.attempts<? AND (p.next_check_at IS NULL OR p.next_check_at<=?)
           ORDER BY CASE p.kind WHEN 'profile' THEN 1 ELSE 0 END,p.attempts LIMIT ?""",
@@ -77,6 +78,11 @@ def run_pipeline() -> None:
             row=jobs[future]
             try:
                 status,final_url,raw=future.result(); page=parse(raw,final_url); digest=hashlib.sha256(page["text"].encode()).hexdigest()
+                official_host = _host(row["school_website"] or "")
+                if not official_host or not _same_site(final_url, official_host):
+                    raise ValueError(
+                        f"rejected cross-school page: {final_url} is not on {official_host or 'a verified domain'}"
+                    )
                 is_changed=bool(row["content_hash"] and row["content_hash"]!=digest); changed+=int(is_changed)
                 next_at=(datetime.now(timezone.utc)+timedelta(days=cfg["recheck_days"])).isoformat(timespec="seconds")
                 with connect() as db:
@@ -86,6 +92,8 @@ def run_pipeline() -> None:
                       fetched_at=?,next_check_at=?,attempts=0,error=NULL WHERE url=?""",(status,digest,page["title"],page["text"][:100000],digest,utcnow(),utcnow(),next_at,row["url"]))
                     if row["kind"]=="directory":
                         for link in profile_links(page,cfg.get("max_profiles_per_directory",200)):
+                            if not _same_site(link, official_host):
+                                continue
                             db.execute("INSERT OR IGNORE INTO pages(url,school_id,department_id,kind) VALUES(?,?,?,'profile')",(link,row["school_id"],row["department_id"]))
                     else:
                         rec=faculty_record(page,row["url"])
