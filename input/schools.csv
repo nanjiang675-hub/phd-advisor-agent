@@ -14,40 +14,40 @@ rank,school,department,department_url,website,ranking_source,ranking_year
 13,Brown University,Computer Science,https://cs.brown.edu/people/faculty/,,US News National Universities,2025
 13,Columbia University,Computer Science,https://www.cs.columbia.edu/people/faculty/,,US News National Universities,2025
 15,Dartmouth College,Computer Science,https://web.cs.dartmouth.edu/people/faculty,,US News National Universities,2025
-15,University of California Los Angeles,,,,US News National Universities,2025
-17,University of California Berkeley,,,,US News National Universities,2025
-18,Rice University,,,,US News National Universities,2025
-18,University of Notre Dame,,,,US News National Universities,2025
-18,Vanderbilt University,,,,US News National Universities,2025
-21,Carnegie Mellon University,,,,US News National Universities,2025
-21,University of Michigan Ann Arbor,,,,US News National Universities,2025
-21,Washington University in St. Louis,,,,US News National Universities,2025
-24,Emory University,,,,US News National Universities,2025
-24,Georgetown University,,,,US News National Universities,2025
-24,University of Virginia,,,,US News National Universities,2025
-27,University of North Carolina Chapel Hill,,,,US News National Universities,2025
-27,University of Southern California,,,,US News National Universities,2025
-29,University of California San Diego,,,,US News National Universities,2025
-30,New York University,,,,US News National Universities,2025
-30,University of Florida,,,,US News National Universities,2025
-30,University of Texas at Austin,,,,US News National Universities,2025
-33,Georgia Institute of Technology,,,,US News National Universities,2025
-33,University of California Davis,,,,US News National Universities,2025
-33,University of California Irvine,,,,US News National Universities,2025
-33,University of Illinois Urbana-Champaign,,,,US News National Universities,2025
+15,University of California Los Angeles,Computer Science,https://www.cs.ucla.edu/faculty/,,US News National Universities,2025
+17,University of California Berkeley,Computer Science,https://eecs.berkeley.edu/people/faculty/,,US News National Universities,2025
+18,Rice University,Computer Science,https://csweb.rice.edu/people/faculty,,US News National Universities,2025
+18,University of Notre Dame,Computer Science,https://cse.nd.edu/people/faculty/,,US News National Universities,2025
+18,Vanderbilt University,Computer Science,https://engineering.vanderbilt.edu/cs/people/faculty/,,US News National Universities,2025
+21,Carnegie Mellon University,Computer Science,https://www.cs.cmu.edu/directory/faculty,,US News National Universities,2025
+21,University of Michigan Ann Arbor,Computer Science,https://cse.engin.umich.edu/people/faculty/,,US News National Universities,2025
+21,Washington University in St. Louis,Computer Science,https://engineering.washu.edu/faculty-research/academic-departments/computer-science-engineering/faculty.html,,US News National Universities,2025
+24,Emory University,Computer Science,https://computerscience.emory.edu/people/faculty/,,US News National Universities,2025
+24,Georgetown University,Computer Science,https://cs.georgetown.edu/people/faculty/,,US News National Universities,2025
+24,University of Virginia,Computer Science,https://engineering.virginia.edu/departments/computer-science/people,,US News National Universities,2025
+27,University of North Carolina Chapel Hill,Computer Science,https://cs.unc.edu/people/faculty/,,US News National Universities,2025
+27,University of Southern California,Computer Science,https://www.cs.usc.edu/faculty/,,US News National Universities,2025
+29,University of California San Diego,Computer Science,https://cse.ucsd.edu/people/faculty-profiles,,US News National Universities,2025
+30,New York University,Computer Science,https://cs.nyu.edu/dynamic/people/faculty/,,US News National Universities,2025
+30,University of Florida,Computer Science,https://www.cise.ufl.edu/people/faculty/,,US News National Universities,2025
+30,University of Texas at Austin,Computer Science,https://www.cs.utexas.edu/people/faculty,,US News National Universities,2025
+33,Georgia Institute of Technology,Computer Science,https://www.cc.gatech.edu/people/faculty,,US News National Universities,2025
+33,University of California Davis,Computer Science,https://cs.ucdavis.edu/people/faculty,,US News National Universities,2025
+33,University of California Irvine,Computer Science,https://ics.uci.edu/faculty/,,US News National Universities,2025
+33,University of Illinois Urbana-Champaign,Computer Science,https://siebelschool.illinois.edu/about/people/faculty,,US News National Universities,2025
 37,Boston College,,,,US News National Universities,2025
-37,Tufts University,,,,US News National Universities,2025
-39,University of California Santa Barbara,,,,US News National Universities,2025
-39,University of Wisconsin-Madison,,,,US News National Universities,2025
-41,Boston University,,,,US News National Universities,2025
-41,Ohio State University,,,,US News National Universities,2025
-41,Rutgers University New Brunswick,,,,US News National Universities,2025
-44,University of Maryland College Park,,,,US News National Universities,2025
-44,University of Rochester,,,,US News National Universities,2025
+37,Tufts University,Computer Science,https://engineering.tufts.edu/cs/people/faculty,,US News National Universities,2025
+39,University of California Santa Barbara,Computer Science,https://www.cs.ucsb.edu/people/faculty,,US News National Universities,2025
+39,University of Wisconsin-Madison,Computer Science,https://www.cs.wisc.edu/faculty/,,US News National Universities,2025
+41,Boston University,Computer Science,https://www.bu.edu/cs/people/faculty/,,US News National Universities,2025
+41,Ohio State University,Computer Science,https://cse.osu.edu/people/faculty,,US News National Universities,2025
+41,Rutgers University New Brunswick,Computer Science,https://www.cs.rutgers.edu/people/professors,,US News National Universities,2025
+44,University of Maryland College Park,Computer Science,https://www.cs.umd.edu/people/faculty,,US News National Universities,2025
+44,University of Rochester,Computer Science,https://www.cs.rochester.edu/people/faculty/,,US News National Universities,2025
 46,Lehigh University,,,,US News National Universities,2025
-46,Purdue University Main Campus,,,,US News National Universities,2025
+46,Purdue University Main Campus,Computer Science,https://www.cs.purdue.edu/people/faculty/index.html,,US News National Universities,2025
 46,University of Georgia,,,,US News National Universities,2025
-46,University of Washington,,,,US News National Universities,2025
+46,University of Washington,Computer Science,https://www.cs.washington.edu/people/faculty,,US News National Universities,2025
 46,Wake Forest University,,,,US News National Universities,2025
 51,Case Western Reserve University,,,,US News National Universities,2025
 51,Texas A&M University,,,,US News National Universities,2025
