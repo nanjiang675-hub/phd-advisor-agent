@@ -8,6 +8,17 @@ from urllib.parse import urljoin, urlparse
 
 TITLE_WORDS = ("professor", "faculty", "lecturer", "research scientist")
 PROFILE_HINTS = ("faculty", "people", "profile", "person", "directory", "bio")
+GENERIC_NAME_WORDS = {"about", "academic", "achievements", "administrative", "admissions", "advisory", "affiliated", "alumni", "board", "biology", "computer", "computational", "contact", "department", "directory", "emeriti", "events", "faculty", "graduate", "in", "memoriam", "news", "open", "openings", "our", "people", "positions", "primary", "research", "researchers", "resources", "science", "secondary", "staff", "student", "students", "undergraduate"}
+
+
+def is_person_name(value: str) -> bool:
+    value = re.sub(r"^(?:Dr\.?|Professor)\s+", "", (value or "").strip(), flags=re.I)
+    value = re.sub(r"\s+", " ", value).strip(" ,|-")
+    if not re.fullmatch(r"[A-Za-z][A-Za-z .,'?\-]+", value): return False
+    tokens = [t.strip(".,'?- ") for t in value.split() if t.strip(".,'?- ")]
+    if not 2 <= len(tokens) <= 5: return False
+    if any(t.lower() in GENERIC_NAME_WORDS for t in tokens): return False
+    return sum(1 for t in tokens if len(t) == 1 or t[0].isupper()) >= 2
 ADMISSION_POSITIVE = (
     r"(?:actively\s+)?recruiting.{0,80}(?:ph\.?d|doctoral)",
     r"looking for.{0,80}(?:ph\.?d|doctoral) students",
@@ -66,7 +77,7 @@ def profile_links(page: dict, limit: int = 200) -> list[str]:
     found=[]
     for url,label in page["links"]:
         low=f"{url} {label}".lower()
-        looks_person = 2 <= len(label.split()) <= 6 and re.fullmatch(r"[A-Za-z .,'-]+", label or "")
+        looks_person = is_person_name(label)
         if looks_person and any(h in low for h in PROFILE_HINTS) and url not in found:
             found.append(url)
         if len(found)>=limit: break
@@ -80,6 +91,7 @@ def faculty_record(page: dict, url: str) -> dict | None:
     name_match=re.match(r"(?:Dr\.?|Professor)?\s*([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){1,3})", heading)
     if not name_match or not any(w in text.lower() for w in TITLE_WORDS): return None
     name=name_match.group(1)
+    if not is_person_name(name): return None
     email_match=re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
     title_match=re.search(r"((?:Assistant|Associate|Full|Distinguished|Research)?\s*Professor[^.;|]{0,80})", text, re.I)
     evidence,status,confidence=admissions(text)
