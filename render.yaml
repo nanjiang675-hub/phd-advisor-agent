@@ -9,4 +9,6 @@ services:
       - key: NO_BROWSER
         value: "1"
       - key: SCAN_INTERVAL_HOURS
-        value: "168"
+        value: "24"
+      - key: BOOTSTRAP_CYCLES
+        value: "8"
