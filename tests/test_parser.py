@@ -43,5 +43,15 @@ class ParserTests(unittest.TestCase):
             faculty_record(page, "https://cs.example.edu/news/alumni")
         )
 
+    def test_profile_without_research_evidence_is_rejected(self):
+        page = parse(
+            "<title>John Smith | CS</title><h1>John Smith</h1>"
+            "<p>Professor. Alumni news, events, and department updates.</p>",
+            "https://cs.example.edu/faculty/john-smith",
+        )
+        self.assertIsNone(
+            faculty_record(page, "https://cs.example.edu/faculty/john-smith")
+        )
+
 
 if __name__ == '__main__': unittest.main()
