@@ -53,5 +53,35 @@ class ParserTests(unittest.TestCase):
             faculty_record(page, "https://cs.example.edu/faculty/john-smith")
         )
 
+    def test_directory_heading_is_not_faculty(self):
+        for heading in (
+            "Faculty Directory",
+            "Affiliated Faculty",
+            "Administrative Staff",
+            "Graduate Students",
+            "Faculty Openings",
+            "Computational Biology",
+        ):
+            page = parse(
+                f"<title>{heading}</title><h1>{heading}</h1>"
+                "<p>Professor. Research interests include machine learning.</p>",
+                "https://cs.example.edu/people",
+            )
+            self.assertIsNone(
+                faculty_record(page, "https://cs.example.edu/people"),
+                heading,
+            )
+
+    def test_css_excerpt_is_not_research(self):
+        page = parse(
+            "<title>Jane Doe</title><h1>Jane Doe</h1>"
+            "<p>Professor. Research areas: body #backtotop "
+            "{ background: red; border-color: blue; }</p>",
+            "https://cs.example.edu/faculty/jane",
+        )
+        self.assertIsNone(
+            faculty_record(page, "https://cs.example.edu/faculty/jane")
+        )
+
 
 if __name__ == '__main__': unittest.main()
