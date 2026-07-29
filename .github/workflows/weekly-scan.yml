@@ -1,31 +1,34 @@
-name: Weekly scan
+name: Daily advisor scan
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 8 * * 1"
+    # 每天北京时间 08:00 运行
+    - cron: "0 0 * * *"
 
 jobs:
-  scan:
+  wake-render-agent:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
-      - name: Scan and export
+      - name: Wake Render agent
+        shell: bash
         run: |
-          cp input/research_profile.example.md input/research_profile.md
-          python agent.py run
-          python agent.py export
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SEARCH_API_KEY: ${{ secrets.SEARCH_API_KEY }}
-          SEARCH_ENDPOINT: ${{ vars.SEARCH_ENDPOINT }}
+          set -euo pipefail
+          url="https://phd-advisor-agent.onrender.com/api/faculty"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: faculty-results
-          path: output/
+          for attempt in {1..12}; do
+            body="$(curl --silent --show-error --location --max-time 90 "$url" || true)"
+
+            if python -c 'import json,sys; data=json.load(sys.stdin); assert isinstance(data,list)' <<<"$body" 2>/dev/null; then
+              echo "Render agent is awake and the daily scan is running."
+              exit 0
+            fi
+
+            echo "Waiting for Render to wake ($attempt/12)..."
+            sleep 20
+          done
+
+          echo "Render agent did not become ready."
+          exit 1
