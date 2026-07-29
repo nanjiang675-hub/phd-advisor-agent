@@ -134,10 +134,13 @@ def faculty_record(page: dict, url: str) -> dict | None:
         return None
     email_match=re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
     title_match=re.search(r"((?:Assistant|Associate|Full|Distinguished|Research)?\s*Professor[^.;|]{0,80})", text, re.I)
+    research = research_excerpt(text)
+    if not research:
+        return None
     evidence,status,confidence=admissions(text)
     return {"name":name,"title":title_match.group(1).strip() if title_match else "Professor",
             "email":email_match.group(0) if email_match else "","profile_url":url,
-            "research_text":research_excerpt(text),"admissions_status":status,
+            "research_text":research,"admissions_status":status,
             "admissions_evidence":evidence,"verification_confidence":confidence}
 
 
