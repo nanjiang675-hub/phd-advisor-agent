@@ -5,7 +5,7 @@ import re
 from html.parser import HTMLParser
 from urllib.parse import urljoin, urlparse
 
-TITLE_WORDS = ("professor", "faculty", "lecturer", "research scientist")
+TITLE_WORDS = ("professor", "lecturer", "research scientist")
 PROFILE_HINTS = ("faculty", "people", "profile", "person", "directory", "bio")
 GENERIC_NAME_WORDS = {
     "about", "academic", "achievements", "administrative", "admissions",
@@ -123,7 +123,8 @@ def faculty_record(page: dict, url: str) -> dict | None:
     if heading.lower() in NON_PERSON_HEADINGS:
         return None
     name_match=re.match(r"(?:Dr\.?|Professor)?\s*([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){1,3})", heading)
-    if not name_match or not any(w in text.lower() for w in TITLE_WORDS): return None
+    if not name_match:
+        return None
     name=name_match.group(1)
     if not is_person_name(name):
         return None
@@ -133,12 +134,20 @@ def faculty_record(page: dict, url: str) -> dict | None:
     ):
         return None
     email_match=re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
-    title_match=re.search(r"((?:Assistant|Associate|Full|Distinguished|Research)?\s*Professor[^.;|]{0,80})", text, re.I)
+    title_match=re.search(
+        r"\b((?:Assistant|Associate|Full|Distinguished|Research|"
+        r"Teaching|Adjunct|Visiting)?\s*(?:Professor|Lecturer|"
+        r"Research Scientist))\b",
+        text,
+        re.I,
+    )
+    if not title_match:
+        return None
     research = research_excerpt(text)
     if not research:
         return None
     evidence,status,confidence=admissions(text)
-    return {"name":name,"title":title_match.group(1).strip() if title_match else "Professor",
+    return {"name":name,"title":title_match.group(1).strip(),
             "email":email_match.group(0) if email_match else "","profile_url":url,
             "research_text":research,"admissions_status":status,
             "admissions_evidence":evidence,"verification_confidence":confidence}
@@ -175,6 +184,13 @@ def research_excerpt(text: str) -> str:
     if not m:
         return ""
     excerpt = cleaned[m.start():m.start()+600]
+    if re.search(
+        r"(?:window\.|document\.|function\s*\(|#[A-Za-z][\w-]*\s*\{|"
+        r"\b(?:background|border-color|font-family)\s*:)",
+        excerpt,
+        re.I,
+    ):
+        return ""
     sentences = re.split(r"(?<=[.!?])\s+", excerpt)
     concise = " ".join(sentences[:4]).strip()
     return concise[:600].rstrip() + ("…" if len(concise) > 600 else "")
