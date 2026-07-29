@@ -5,10 +5,8 @@ services:
     plan: free
     envVars:
       - key: DATABASE_PATH
-        value: /tmp/faculty.sqlite
+        value: /tmp/faculty-v7.sqlite
       - key: NO_BROWSER
         value: "1"
       - key: SCAN_INTERVAL_HOURS
         value: "24"
-      - key: BOOTSTRAP_CYCLES
-        value: "8"
