@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from .config import DB_PATH, ROOT
 
 
-DISCOVERY_DATA_VERSION = "6"
+DISCOVERY_DATA_VERSION = "7"
 
 
 class ClosingConnection(sqlite3.Connection):
