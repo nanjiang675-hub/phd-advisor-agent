@@ -3,7 +3,7 @@ from __future__ import annotations
 import html
 import re
 from html.parser import HTMLParser
-from urllib.parse import urljoin, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 TITLE_WORDS = ("professor", "lecturer", "research scientist")
 PROFILE_HINTS = ("faculty", "people", "profile", "person", "directory", "bio")
@@ -15,6 +15,14 @@ GENERIC_NAME_WORDS = {
     "people", "positions", "primary", "research", "researchers", "resources",
     "science", "secondary", "staff", "student", "students", "undergraduate",
 }
+NON_PERSON_NAMES = {
+    "administrative staff", "affiliated faculty", "alumni news",
+    "cis open faculty positions", "computational biology",
+    "department directory", "faculty achievements", "faculty directory",
+    "faculty openings", "faculty resources", "graduate alumni",
+    "graduate students", "in memoriam", "our faculty",
+    "people advisory board", "primary faculty", "secondary faculty",
+}
 
 
 def is_person_name(value: str) -> bool:
@@ -22,6 +30,8 @@ def is_person_name(value: str) -> bool:
         r"^(?:Dr\.?|Professor)\s+", "", (value or "").strip(), flags=re.I
     )
     value = re.sub(r"\s+", " ", value).strip(" ,|-")
+    if value.casefold() in NON_PERSON_NAMES:
+        return False
     if not re.fullmatch(r"[A-Za-z][A-Za-z .,'?\-]+", value):
         return False
     tokens = [t.strip(".,'?- ") for t in value.split() if t.strip(".,'?- ")]
@@ -30,6 +40,25 @@ def is_person_name(value: str) -> bool:
     if any(t.lower() in GENERIC_NAME_WORDS for t in tokens):
         return False
     return sum(1 for t in tokens if len(t) == 1 or t[0].isupper()) >= 2
+
+
+def profile_url_matches_name(name: str, url: str) -> bool:
+    """Accept only profile URLs whose path identifies the named person."""
+    if not name or not url:
+        return False
+    path = unquote(urlparse(url).path).casefold()
+    path_words = set(re.findall(r"[a-z0-9]+", path))
+    name_words = [
+        word for word in re.findall(r"[a-z0-9]+", name.casefold())
+        if len(word) >= 3
+    ]
+    if len(name_words) < 2:
+        return False
+    compact_path = re.sub(r"[^a-z0-9]", "", path)
+    return (
+        name_words[-1] in path_words
+        or "".join(name_words) in compact_path
+    )
 
 
 def is_valid_faculty_output(record: dict) -> bool:
@@ -43,6 +72,8 @@ def is_valid_faculty_output(record: dict) -> bool:
     ):
         return False
     profile_url = str(record.get("profile_url") or "")
+    if not profile_url_matches_name(str(record.get("name", "")), profile_url):
+        return False
     if profile_url and any(
         part in urlparse(profile_url).path.lower()
         for part in NON_PROFILE_PATHS
@@ -174,6 +205,8 @@ def faculty_record(page: dict, url: str) -> dict | None:
         return None
     name=re.sub(r"^(?:Dr\.?|Professor)\s+", "", heading, flags=re.I).strip()
     if not is_person_name(name):
+        return None
+    if not profile_url_matches_name(name, url):
         return None
     if any(
         word.lower() in {"news", "events", "alumni", "faculty", "directory"}
