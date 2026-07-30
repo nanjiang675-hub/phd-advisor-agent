@@ -146,6 +146,24 @@ class ParserTests(unittest.TestCase):
             "and artificial intelligence methods for scientific discovery.",
         }))
 
+    def test_output_guard_rejects_legacy_css_payload(self):
+        self.assertFalse(is_valid_faculty_output({
+            "name": "Jane Doe",
+            "title": "Professor",
+            "profile_url": "https://cs.example.edu/people/jane",
+            "research": "body #backtotop { background: blue; } "
+            "window.a2a_config callbacks overlays javascript style content",
+        }))
+
+    def test_output_guard_rejects_news_profile_url(self):
+        self.assertFalse(is_valid_faculty_output({
+            "name": "Jane Doe",
+            "title": "Professor",
+            "profile_url": "https://cs.example.edu/news/jane-award",
+            "research_text": "My research interests include machine learning "
+            "models for reliable scientific and medical applications.",
+        }))
+
     def test_output_guard_accepts_real_faculty(self):
         self.assertTrue(is_valid_faculty_output({
             "name": "Jane Doe",
