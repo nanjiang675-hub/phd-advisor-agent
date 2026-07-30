@@ -126,6 +126,7 @@ def run_pipeline() -> None:
                     db.execute("""UPDATE pages SET status='ok',http_status=?,content_hash=?,title=?,text_content=?,
                       changed_at=CASE WHEN content_hash IS NOT NULL AND content_hash<>? THEN ? ELSE changed_at END,
                       fetched_at=?,next_check_at=?,attempts=0,error=NULL WHERE url=?""",(status,digest,page["title"],page["text"][:100000],digest,utcnow(),utcnow(),next_at,row["url"]))
+                    rec = None
                     if row["kind"]=="directory":
                         for link in profile_links(page,cfg.get("max_profiles_per_directory",200)):
                             if not _same_site(link, official_host):

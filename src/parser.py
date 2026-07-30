@@ -45,6 +45,15 @@ def is_valid_faculty_output(record: dict) -> bool:
     research = str(record.get("research_text", ""))
     if len(research.split()) < 8:
         return False
+    combined = f"{record.get('name', '')} {research}".lower()
+    if any(
+        phrase in combined
+        for phrase in (
+            "alumni news", "faculty news", "news & events",
+            "toggle people", "chevron up", "plus minus",
+        )
+    ):
+        return False
     if re.search(
         r"(?:window\.|document\.|function\s*\(|#[A-Za-z][\w-]*\s*\{|"
         r"\b(?:background|border-color|font-family)\s*:)",
@@ -141,14 +150,19 @@ def faculty_record(page: dict, url: str) -> dict | None:
     if any(part in urlparse(url).path.lower() for part in NON_PROFILE_PATHS):
         return None
     text=page["text"][:30000]
-    heading=(page["h1"] or page["title"].split("|")[0]).strip()
-    heading=re.sub(r"\s+[-|].*$", "", heading).strip()
+    heading=(page["h1"] or page["title"]).strip()
+    heading=re.split(r"\s*(?:\||—|–)\s*", heading, maxsplit=1)[0].strip()
+    heading=re.sub(
+        r",?\s+(?:(?:Assistant|Associate|Full|Distinguished|Research|"
+        r"Teaching|Adjunct|Visiting)\s+)?(?:Professor|Lecturer|"
+        r"Research Scientist)\b.*$",
+        "",
+        heading,
+        flags=re.I,
+    ).strip()
     if heading.lower() in NON_PERSON_HEADINGS:
         return None
-    name_match=re.match(r"(?:Dr\.?|Professor)?\s*([A-Z][A-Za-z'’-]+(?:\s+[A-Z][A-Za-z'’-]+){1,3})", heading)
-    if not name_match:
-        return None
-    name=name_match.group(1)
+    name=re.sub(r"^(?:Dr\.?|Professor)\s+", "", heading, flags=re.I).strip()
     if not is_person_name(name):
         return None
     if any(

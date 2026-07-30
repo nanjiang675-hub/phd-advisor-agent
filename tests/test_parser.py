@@ -49,6 +49,30 @@ class ParserTests(unittest.TestCase):
             faculty_record(page, "https://cs.example.edu/news/alumni")
         )
 
+    def test_alumni_news_is_rejected_even_on_profile_path(self):
+        page = parse(
+            "<title>Alumni News | Computer Science</title>"
+            "<h1>Alumni News</h1><p>Professor. Research interests include "
+            "machine learning systems for scientific applications.</p>",
+            "https://cs.example.edu/people/alumni-news",
+        )
+        self.assertIsNone(
+            faculty_record(page, "https://cs.example.edu/people/alumni-news")
+        )
+
+    def test_valid_name_with_page_suffix_is_accepted(self):
+        page = parse(
+            "<title>Jane Q. Smith | Computer Science</title>"
+            "<h1>Jane Q. Smith</h1><p>Assistant Professor. "
+            "Research interests include robust machine learning systems "
+            "for scientific and medical applications.</p>",
+            "https://cs.example.edu/people/jane-smith",
+        )
+        rec = faculty_record(
+            page, "https://cs.example.edu/people/jane-smith"
+        )
+        self.assertEqual(rec["name"], "Jane Q. Smith")
+
     def test_profile_without_research_evidence_is_rejected(self):
         page = parse(
             "<title>John Smith | CS</title><h1>John Smith</h1>"
