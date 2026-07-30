@@ -14,7 +14,12 @@ from urllib.parse import urlparse
 
 from .config import ROOT, settings
 from .db import connect, init_db, utcnow
-from .parser import faculty_record, parse, profile_links
+from .parser import (
+    faculty_record,
+    is_valid_faculty_output,
+    parse,
+    profile_links,
+)
 from .verifier import verify_with_model
 from .search import _host, _same_site, discover_department_urls
 
@@ -128,7 +133,7 @@ def run_pipeline() -> None:
                             db.execute("INSERT OR IGNORE INTO pages(url,school_id,department_id,kind) VALUES(?,?,?,'profile')",(link,row["school_id"],row["department_id"]))
                     else:
                         rec=faculty_record(page,row["url"])
-                        if rec:
+                    if rec and is_valid_faculty_output(rec):
                             result,cost=(None,0.0)
                             if rec["admissions_status"]=="suspected_open" and model_calls<cfg["max_model_calls_per_run"]:
                                 try: result,cost=verify_with_model(rec,cfg,spent)
