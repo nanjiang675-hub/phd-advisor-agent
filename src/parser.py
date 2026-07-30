@@ -42,7 +42,15 @@ def is_valid_faculty_output(record: dict) -> bool:
         re.I,
     ):
         return False
-    research = str(record.get("research_text", ""))
+    profile_url = str(record.get("profile_url") or "")
+    if profile_url and any(
+        part in urlparse(profile_url).path.lower()
+        for part in NON_PROFILE_PATHS
+    ):
+        return False
+    research = str(
+        record.get("research_text") or record.get("research") or ""
+    )
     if len(research.split()) < 8:
         return False
     combined = f"{record.get('name', '')} {research}".lower()
@@ -51,11 +59,13 @@ def is_valid_faculty_output(record: dict) -> bool:
         for phrase in (
             "alumni news", "faculty news", "news & events",
             "toggle people", "chevron up", "plus minus",
+            "a2a_config", "#backtotop", "javascript:",
         )
     ):
         return False
     if re.search(
-        r"(?:window\.|document\.|function\s*\(|#[A-Za-z][\w-]*\s*\{|"
+        r"(?:window\.|document\.|function\s*\(|a2a_config|<script|"
+        r"#[A-Za-z][\w-]*\s*\{|"
         r"\b(?:background|border-color|font-family)\s*:)",
         research,
         re.I,
