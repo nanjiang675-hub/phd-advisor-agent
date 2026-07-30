@@ -7,6 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .config import ROOT
 from .db import connect
+from .parser import is_valid_faculty_output
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -24,10 +25,14 @@ class Handler(SimpleHTTPRequestHandler):
         if parsed.path == "/api/schools":
             with connect() as db:
                 rows = db.execute(
-                    """SELECT DISTINCT s.name FROM faculty f
-                       JOIN schools s ON s.id=f.school_id ORDER BY s.name"""
+                    """SELECT f.name,f.title,f.research_text,s.name school
+                       FROM faculty f JOIN schools s ON s.id=f.school_id"""
                 ).fetchall()
-            return self._json([row["name"] for row in rows])
+            schools = sorted({
+                row["school"] for row in rows
+                if is_valid_faculty_output(dict(row))
+            })
+            return self._json(schools)
 
         if parsed.path == "/api/faculty":
             query = parse_qs(parsed.query)
@@ -48,7 +53,11 @@ class Handler(SimpleHTTPRequestHandler):
             sql += " ORDER BY f.match_score DESC,s.rank IS NULL,s.rank,f.name"
             with connect() as db:
                 rows = db.execute(sql, params).fetchall()
-            return self._json([dict(row) for row in rows])
+            records = [
+                dict(row) for row in rows
+                if is_valid_faculty_output(dict(row))
+            ]
+            return self._json(records)
 
         if parsed.path == "/":
             self.path = "/web/index.html"
