@@ -3,6 +3,7 @@ import unittest
 from src.parser import (
     admissions,
     faculty_record,
+    is_person_name,
     is_valid_faculty_output,
     parse,
     profile_links,
@@ -10,6 +11,30 @@ from src.parser import (
 
 
 class ParserTests(unittest.TestCase):
+    def test_generic_directory_headings_are_not_people(self):
+        generic_names = [
+            "Computational Biology",
+            "Faculty Achievements",
+            "Affiliated Faculty",
+            "Department Directory",
+            "In Memoriam",
+            "Administrative Staff",
+            "Graduate Students",
+            "Primary Faculty",
+            "Secondary Faculty",
+            "Graduate Alumni",
+            "Alumni News",
+            "Faculty Directory",
+            "Faculty Openings",
+            "People Advisory Board",
+            "CIS Open Faculty Positions",
+            "Our Faculty",
+            "Faculty Resources",
+        ]
+        for name in generic_names:
+            with self.subTest(name=name):
+                self.assertFalse(is_person_name(name))
+
     def test_directory_discovers_profile(self):
         page=parse('<a href="/faculty/jane-doe">Jane Doe</a>', 'https://cs.example.edu/people')
         self.assertEqual(profile_links(page), ['https://cs.example.edu/faculty/jane-doe'])
