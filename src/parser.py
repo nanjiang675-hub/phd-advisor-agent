@@ -30,6 +30,29 @@ def is_person_name(value: str) -> bool:
     if any(t.lower() in GENERIC_NAME_WORDS for t in tokens):
         return False
     return sum(1 for t in tokens if len(t) == 1 or t[0].isupper()) >= 2
+
+
+def is_valid_faculty_output(record: dict) -> bool:
+    """Final safety check before a faculty record is stored or displayed."""
+    if not is_person_name(str(record.get("name", ""))):
+        return False
+    if not re.search(
+        r"\b(?:professor|lecturer|research scientist)\b",
+        str(record.get("title", "")),
+        re.I,
+    ):
+        return False
+    research = str(record.get("research_text", ""))
+    if len(research.split()) < 8:
+        return False
+    if re.search(
+        r"(?:window\.|document\.|function\s*\(|#[A-Za-z][\w-]*\s*\{|"
+        r"\b(?:background|border-color|font-family)\s*:)",
+        research,
+        re.I,
+    ):
+        return False
+    return True
 ADMISSION_POSITIVE = (
     r"(?:actively\s+)?recruiting.{0,80}(?:ph\.?d|doctoral)",
     r"looking for.{0,80}(?:ph\.?d|doctoral) students",
