@@ -6,6 +6,7 @@ from src.parser import (
     is_person_name,
     is_valid_faculty_output,
     parse,
+    profile_url_matches_name,
     profile_links,
 )
 
@@ -35,6 +36,17 @@ class ParserTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertFalse(is_person_name(name))
 
+    def test_profile_url_must_match_person_name(self):
+        self.assertTrue(profile_url_matches_name(
+            "Jane Smith", "https://cs.example.edu/people/jane-smith"
+        ))
+        self.assertTrue(profile_url_matches_name(
+            "Abhishek Jain", "https://cs.jhu.edu/faculty/abhishek-jain/"
+        ))
+        self.assertFalse(profile_url_matches_name(
+            "Jane Smith", "https://cs.example.edu/faculty-directory/"
+        ))
+
     def test_directory_discovers_profile(self):
         page=parse('<a href="/faculty/jane-doe">Jane Doe</a>', 'https://cs.example.edu/people')
         self.assertEqual(profile_links(page), ['https://cs.example.edu/faculty/jane-doe'])
@@ -49,8 +61,8 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(status,'not_recruiting')
 
     def test_faculty_profile(self):
-        page=parse('<title>Jane Doe | CS</title><h1>Jane Doe</h1><p>Assistant Professor. My research interests: machine learning. I am recruiting PhD students.</p><p>jane@example.edu</p>','https://cs.example.edu/faculty/jane')
-        rec=faculty_record(page,'https://cs.example.edu/faculty/jane')
+        page=parse('<title>Jane Doe | CS</title><h1>Jane Doe</h1><p>Assistant Professor. My research interests: machine learning. I am recruiting PhD students.</p><p>jane@example.edu</p>','https://cs.example.edu/faculty/jane-doe')
+        rec=faculty_record(page,'https://cs.example.edu/faculty/jane-doe')
         self.assertEqual(rec['name'],'Jane Doe')
         self.assertEqual(rec['email'],'jane@example.edu')
 
@@ -168,6 +180,7 @@ class ParserTests(unittest.TestCase):
         self.assertTrue(is_valid_faculty_output({
             "name": "Jane Doe",
             "title": "Assistant Professor",
+            "profile_url": "https://cs.example.edu/people/jane-doe",
             "research_text": "My research interests include machine learning "
             "models for reliable scientific and medical applications.",
         }))
