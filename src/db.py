@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from .config import DB_PATH, ROOT
 
 
-DISCOVERY_DATA_VERSION = "11"
+DISCOVERY_DATA_VERSION = "12"
 
 
 class ClosingConnection(sqlite3.Connection):
@@ -73,6 +73,7 @@ def init_db(load_inputs: bool = False) -> None:
         db.executescript(SCHEMA)
         _migrate_legacy(db)
         _ensure_discovery_data_version(db)
+        _purge_invalid_faculty(db)
     if load_inputs:
         import_schools()
 
@@ -95,6 +96,22 @@ def _ensure_discovery_data_version(db: sqlite3.Connection) -> None:
         "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
         (DISCOVERY_DATA_VERSION,),
     )
+
+
+def _purge_invalid_faculty(db: sqlite3.Connection) -> None:
+    from .parser import is_valid_faculty_output
+
+    rows = db.execute(
+        "SELECT id, name, title, profile_url, research_text FROM faculty"
+    ).fetchall()
+    for row in rows:
+        if is_valid_faculty_output(dict(row)):
+            continue
+        db.execute(
+            "DELETE FROM review_queue WHERE faculty_id = ?",
+            (row["id"],),
+        )
+        db.execute("DELETE FROM faculty WHERE id = ?", (row["id"],))
 
 
 def _columns(db: sqlite3.Connection, table: str) -> set[str]:
