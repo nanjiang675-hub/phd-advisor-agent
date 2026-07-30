@@ -1,6 +1,12 @@
 import unittest
 
-from src.parser import admissions, faculty_record, parse, profile_links
+from src.parser import (
+    admissions,
+    faculty_record,
+    is_valid_faculty_output,
+    parse,
+    profile_links,
+)
 
 
 class ParserTests(unittest.TestCase):
@@ -82,6 +88,22 @@ class ParserTests(unittest.TestCase):
         self.assertIsNone(
             faculty_record(page, "https://cs.example.edu/faculty/jane")
         )
+
+    def test_output_guard_rejects_alumni_news(self):
+        self.assertFalse(is_valid_faculty_output({
+            "name": "Alumni News",
+            "title": "Professor",
+            "research_text": "Research interests include machine learning "
+            "and artificial intelligence methods for scientific discovery.",
+        }))
+
+    def test_output_guard_accepts_real_faculty(self):
+        self.assertTrue(is_valid_faculty_output({
+            "name": "Jane Doe",
+            "title": "Assistant Professor",
+            "research_text": "My research interests include machine learning "
+            "models for reliable scientific and medical applications.",
+        }))
 
 
 if __name__ == '__main__': unittest.main()
